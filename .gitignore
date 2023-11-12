@@ -164,4 +164,3 @@ csv/**
 json/**
 *_test.py
 *.bk
-!species_dict*.csv

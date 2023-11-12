@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-Retrieves observation data from ebird.org and returns a table with monthly counts.
+Retrieves observation data in a region from ebird.org and returns a table with monthly counts.
 - 'X' is ignored and will be counted as 0.
 - An eBird API key is needed.
 - If `species_dict.csv` exists, read from it unless `--species` is specified
@@ -24,6 +24,15 @@ Directory structure:
 [References]
   eBird API 2.0: https://documenter.getpostman.com/view/664302/S1ENwy59
   API key request: https://ebird.org/api/keygen
+
+TODO:
+[x] Read API key from file or terminal
+[x] Session
+[ ] async
+[ ] Merge monthly data of one year into one file
+[ ] Add hotspot info
+[ ] Map the BC code
+[ ] Merge BC code
 """
 # 2023-11-09 created by Lydia
 # 2023-11-10 last modified by Lydia
@@ -34,21 +43,24 @@ import requests
 import pandas as pd
 import csv
 import json
+import sys
 import os
 from io import StringIO
 
 # -- eBird API key --
-api_key = 'ji1p6han22uh'
+API_KEY = ''
+api_file = "../eBird_API_Key.txt" # If the file does not exist, read from terminal
 
-# -- Region code --
-location_code = 'L164543' # North Vancouver--Maplewood Conservation Area
+# -- Country, subnational1, subnational2, or location code --
+REGION_CODE = 'L164543' # North Vancouver--Maplewood Conservation Area
 
 # -- Target URL --
 base_url = "https://api.ebird.org/v2"
 url = {
-    'species': base_url + "/product/spplist/{regionCode}",
+    'hotspot': base_url + "/ref/hotspot/info/{region_code}",
+    'species': base_url + "/product/spplist/{region_code}",
     'taxonomy': base_url + "/ref/taxonomy/ebird?species={speciesCode}",
-    'historical': base_url + "/data/obs/{regionCode}/historic/{y}/{m}/{d}",
+    'historical': base_url + "/data/obs/{region_code}/historic/{y}/{m}/{d}",
 }
 
 # -- Default dates --
@@ -78,9 +90,9 @@ column_names_dict = {'SPECIES_CODE': primary_key,
 # -- Export files --
 # filename without suffix
 export_file = {
-    'species': "species_dict_{location_code}",
-    'historical': "obs_historical_{start_date}", # JSON only
-    'merged': "obs_count_{start_date}--{end_date}",
+    'species': "species_ebird_{region_code}",
+    'historical': "obs_ebird_{start_date}",
+    'merged': "obs_ebird_{start_date}--{end_date}",
 }
 
 ###############################################################################|
@@ -95,21 +107,25 @@ def export(data, suffix, filename, subdir=''):
             os.makedirs(dirname)
             print(f"Directory '{dirname}' created.")
         except OSError as e:
-            print(e)
-            raise
+            sys.exit(e)
     
     if suffix == 'json':
-        if isinstance(data, str):
+        if isinstance(data, list):
+            json_object = json.dumps(data, indent=4)
             with open(fullpath, 'w') as f:
-                f.write(data)
-        else:
+                f.write(json_object)
+        elif isinstance(data, pd.core.frame.DataFrame):
             data.to_json(fullpath, orient='records', indent=4)
-            
+        else:
+            sys.exit(f"Unsupported data type {type(data)}.")
     elif suffix == 'csv':
-        data.to_csv(fullpath, sep=',', index=False, header=True,
-                    quoting=csv.QUOTE_NONNUMERIC,
-                    lineterminator='\n',
-                    encoding='utf-8')
+        if isinstance(data, pd.core.frame.DataFrame):
+            data.to_csv(fullpath, sep=',', index=False, header=True,
+                        quoting=csv.QUOTE_NONNUMERIC,
+                        lineterminator='\n',
+                        encoding='utf-8')
+        else:
+            sys.exit(f"Unsupported data type {type(data)}.")
     print(f"--> Exported to: {fullpath}")
 
 ###############################################################################|
@@ -119,73 +135,97 @@ def main():
     
     # Parse arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument('dates', metavar='date', nargs='*',
-                        help=f"format: YYYY-MM-DD (default: [{start_date.strftime('%Y-%m-%d')}, {end_date.strftime('%Y-%m-%d')}])")
-    parser.add_argument('-s', '--species', action='store_true', help='(re)download species list (default: %(default)s)')
-    parser.add_argument('-d', '--daily', action='store_true', help='(re)download species list (default: %(default)s)')
+    # parser.add_argument('dates', metavar='date', nargs='*',
+    #                     help=f"format: YYYY-MM-DD (default: [{start_date.strftime('%Y-%m-%d')}, {end_date.strftime('%Y-%m-%d')}])")
+    parser.add_argument('start_date', nargs='?', default=start_date.strftime('%Y-%m-%d'), help="format: YYYY-MM-DD (default: %(default)s)")
+    parser.add_argument('end_date', nargs='?', default=end_date.strftime('%Y-%m-%d'), help="format: YYYY-MM-DD (default: %(default)s)")
+    parser.add_argument('-f', dest='formats', metavar='FORMAT', nargs='+', default=('csv',), choices={'csv', 'json'},
+                        help='export format of observation data: {%(choices)s} (default: %(default)s)')
+    parser.add_argument('--region', nargs='?', default=REGION_CODE, help='location code (default: %(default)s)')
+    parser.add_argument('--api', nargs='?', default=API_KEY, help=f"API key, read from file '{api_file}' if not specified")
+    parser.add_argument('-s', '--species', action='store_true',
+                        help=f"(re)download species list as csv (default: %(default)s, read from 'species/{export_file['species']}.csv')")
+    parser.add_argument('-d', '--daily', action='store_true', help='store daily data in JSON or CSV format (default: %(default)s)')
     args = parser.parse_args()
     
+    export_formats = set(args.formats)
     download_species = args.species
-    num_dates = len(args.dates)
-    start_date = datetime.strptime(START_DATE, '%Y-%m-%d')
-    end_date = datetime.strptime(END_DATE, '%Y-%m-%d') if END_DATE else datetime.now() - timedelta(days=1)
-    if num_dates > 0:
-        start_date = datetime.strptime(args.dates[0], '%Y-%m-%d')
-    if num_dates > 1:
-        end_date = datetime.strptime(args.dates[1], '%Y-%m-%d')
-    
+    download_daily = args.daily
+    region_code = args.region
+    api_key = args.api
+
+    if args.start_date:
+        start_date = datetime.strptime(args.start_date, '%Y-%m-%d')
+    if args.end_date:
+        end_date = datetime.strptime(args.end_date, '%Y-%m-%d')
+    if start_date > end_date:
+        start_date, end_date = end_date, start_date
+
+    if not api_key:
+        try:
+            with open(api_file, 'r', newline="") as f:
+                api_key = f.readline().strip()
+        except:
+            api_key = input(f"Please enter the eBird API key: ")
+        if not api_key:
+            sys.exit(f"Exit.")
     headers = {'X-eBirdApiToken': api_key}
-    
+
+    print(f"[API key]    {api_key}")
+    print(f"[Region]     {region_code}")
     print(f"[Start date] {start_date.strftime('%b %d, %Y')}")
     print(f"[End date]   {end_date.strftime('%b %d, %Y')}")
-    print("Connecting...\n")
     
     #--------------------------------------------------------------------------|
     # Get species & names
-    try:
-        # If exist, read
-        input_file = f"csv/{export_file['species'].format(location_code=location_code)}.csv"
-        print(f"Reading data from '{input_file}'...\n")
-        species_df = pd.read_csv(input_file, sep=',', header=0,
-                        engine='python',
-                        skipinitialspace=True,
-                        quoting=csv.QUOTE_NONNUMERIC,
-                        encoding='utf-8')
-        print(f"Read data from '{input_file}' exists, skip downloading.")
-    except FileNotFoundError:
-        download_species = True
+    if not download_species:
+        try:
+            # If exist, read
+            input_file = f"species/{export_file['species'].format(region_code=region_code)}.csv"
+            species_df = pd.read_csv(input_file, sep=',', header=0,
+                                     skipinitialspace=True,
+                                     quoting=csv.QUOTE_NONNUMERIC,
+                                     encoding='utf-8')
+            print(f"\nRead data from '{input_file}'.")
+        except FileNotFoundError:
+            download_species = True
 
+    session = requests.Session()
+    
     if download_species:
         #----------------------------------------------------------------------|
-        # Download species
+        # Download species codes in a region
         query_type = 'species'
-        response = requests.get(url[query_type].format(regionCode=location_code),
-                                headers=headers)
+        url_full = url[query_type].format(region_code=region_code)
+        response = session.get(url_full, headers=headers)
         if response.status_code == 200:
             data = response.json()
-            json_object = json.dumps(data, indent=4)
             species_df = pd.DataFrame(data, columns=[primary_key])
-            export(json_object, 'json', export_file[query_type].format(location_code=location_code))
+        else:
+            sys.exit(f"GET request failed.\nURL: {url_full}\nStatus code: {response.status_code}")
         #----------------------------------------------------------------------|
         # Download names
         query_type = 'taxonomy'
-        print("Downloading species...")
+        print("\nDownloading species...")
         df_names = []
         for species_code in species_df[primary_key]:
-            print(f"  {species_code}")
-            response = requests.get(url[query_type].format(speciesCode=species_code),
-                                    headers=headers)
+            # print(f"  {species_code}")
+            url_full = url[query_type].format(speciesCode=species_code)
+            response = session.get(url_full, headers=headers)
             if response.status_code == 200:
                 data = response.text
                 cols = list(column_names_dict.keys())
                 df = pd.read_csv(StringIO(data), usecols=cols)[cols].rename(columns=column_names_dict)
                 df_names.append(df)
+            else:
+                sys.exit(f"GET request failed.\nURL: {url_full}\nStatus code: {response.status_code}")
         
         species_df = pd.concat(df_names, axis=0)
-        export(species_df, 'csv', export_file['species'].format(location_code=location_code))
+        export(species_df, 'csv',
+               export_file['species'].format(region_code=region_code),
+               subdir='species')
     
     print(f"({species_df.shape[0]} species)\n")
-    # exit(0)
     
     #--------------------------------------------------------------------------|
     # Download obervation data
@@ -196,27 +236,30 @@ def main():
         merged_df = species_df.copy()
         merged_df[column_of_count] = 0
         last_date = current_date
-        print(f">> {last_date.strftime('%B, %Y')} <<")
+        print(f"== {last_date.strftime('%B, %Y')} ==")
         # For each month
         while current_date.month == last_date.month:
-            response = requests.get(url[query_type].format(regionCode=location_code,
-                                                           y=current_date.year,
-                                                           m=current_date.month,
-                                                           d=current_date.day),
-                                    headers=headers)
+            url_full = url[query_type].format(region_code=region_code,
+                                              y=current_date.year,
+                                              m=current_date.month,
+                                              d=current_date.day)
+            response = session.get(url_full, headers=headers)
             if response.status_code == 200:
                 data = response.json()
                 if data:
-                    json_object = json.dumps(data, indent=4)
                     df = pd.DataFrame(data)
-                    # -- Export JSON ------------------------------------------|
-                    # export(json_object, 'json',
-                    #     export_file[query_type].format(start_date=current_date.strftime('%Y-%m-%d')),
-                    #     subdir=os.path.join(location_code, str(current_date.year), str(current_date.month)))
-                    # print(f"    ({df.shape[0]} rows x {df.shape[1]} columns)")
+                    # -- Daily data ---------------------------------------- --|
+                    if download_daily:
+                        for fmt in export_formats:
+                            export(data if fmt == 'json' else df, fmt,
+                                   export_file[query_type].format(start_date=current_date.strftime('%Y-%m-%d')),
+                                   subdir=os.path.join(region_code, str(current_date.year), str(current_date.month)))
+                            print(f"    ({df.shape[0]} rows x {df.shape[1]} columns)")
                     #----------------------------------------------------------|
                     merged_df = pd.merge(merged_df, df[selected_columns], on=selected_columns, how='outer')
-                
+            else:
+                sys.exit(f"GET request failed.\nURL: {url_full}\nStatus code: {response.status_code}")
+            
             current_date -= timedelta(days=1)
             
         #----------------------------------------------------------------------|
@@ -234,10 +277,10 @@ def main():
         date0_str = last_date.replace(day=1).strftime('%Y-%m-%d')
         date1_str = last_date.strftime('%Y-%m-%d')
         print(f"Merged:")
-        for suffix in ['csv', 'json']:
-            export(merged_df, suffix,
-                export_file['merged'].format(start_date=date0_str, end_date=date1_str),
-                subdir=os.path.join(location_code, str(last_date.year)))
+        for fmt in export_formats:
+            export(merged_df, fmt,
+                   export_file['merged'].format(start_date=date0_str, end_date=date1_str),
+                   subdir=os.path.join(region_code, str(last_date.year)))
         print(f"    ({merged_df.shape[0]} rows x {merged_df.shape[1]} columns)")
 
 ###############################################################################|
