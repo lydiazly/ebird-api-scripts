@@ -166,3 +166,4 @@ json/**
 test/**
 *_test.py
 *.bk
+tmp.*
