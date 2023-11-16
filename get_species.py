@@ -19,18 +19,6 @@ from constants import *
 REGION_CODE = 'CA-BC'
 # REGION_CODE = 'L164543'
 
-# -- Map the columns from taxonomy data to the merged table --
-COLUMN_NAME_DICT = {
-    'SPECIES_CODE'   : 'speciesCode',
-    'COM_NAME_CODES' : 'comNameCode',
-    'BANDING_CODES'  : 'bandingCode',
-    'SCI_NAME_CODES' : 'sciNameCode',
-    'COMMON_NAME'    : 'comName',
-    'SCIENTIFIC_NAME': 'sciName',
-}
-
-INCLUDE_SUBSPECIES = ['yerwar', 'rethaw']
-
 ###############################################################################|
 def get_species(session: requests.Session, url_dict: dict, region_code: str, headers: dict) -> pd.DataFrame:
     species_df = pd.DataFrame()
@@ -50,16 +38,22 @@ def get_species(session: requests.Session, url_dict: dict, region_code: str, hea
     print(f"Downloading subspecies from '{url_dict[query_type]}' ...")
     subspecies_list = []
     for species_code in species_list:
-        if species_code in INCLUDE_SUBSPECIES:
+        if species_code in INCLUDE_SUBSPECIES.keys():
             # Get subspecies
             url_full = url_dict[query_type].format(speciesCode=species_code)
             response = session.get(url_full, headers=headers)
             if response.status_code == 200:
                 sub_list = response.json()
                 # If subspecies are found, append new entries
-                if len(sub_list) > 1:
-                    subspecies_list.extend(sub_list)
-                    print(f"> Appended subspecies of {species_code}: {sub_list}")
+                if sub_list:
+                    if INCLUDE_SUBSPECIES[species_code]:
+                        for s in sub_list:
+                            if s in INCLUDE_SUBSPECIES[species_code]:
+                                subspecies_list.append(s)
+                                print(f"> Appended subspecies of {species_code}: {s}")
+                    else:
+                        subspecies_list.extend(sub_list)
+                        print(f"> Appended subspecies of {species_code}: {sub_list}")
             else:
                 sys.exit(f"GET request failed.\nURL: {url_full}\nStatus code: {response.status_code}")
     species_list.extend(subspecies_list)
@@ -87,7 +81,18 @@ def get_species(session: requests.Session, url_dict: dict, region_code: str, hea
 
 ###############################################################################|
 if __name__ == '__main__':
-    api_key = ''
+    #--------------------------------------------------------------------------|
+    # Parse arguments
+    #--------------------------------------------------------------------------|
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--region', nargs='?', default=REGION_CODE, help='location code (default: %(default)s)')
+    parser.add_argument('--api', nargs='?', default=API_KEY, help=f"API key, read from file '{API_FILE}' if not specified")
+    args = parser.parse_args()
+    
+    region_code = args.region
+    api_key = args.api
+    
     try:
         print(f"Reading API key from '{API_FILE}'")
         with open(API_FILE, 'r', newline="") as f:
@@ -100,8 +105,10 @@ if __name__ == '__main__':
     headers = {'X-eBirdApiToken': api_key}
     
     session = requests.Session()
-    species_df = get_species(session, URL_DICT, REGION_CODE, headers)
+    species_df = get_species(session, URL_DICT, region_code, headers)
     
     if not species_df.empty:
-        export(species_df, 'csv', f"species_ebird_{REGION_CODE}", subdir='species')
+        export(species_df, 'csv',
+               EXPORT_FILE['species_ebird'].format(region_code=region_code),
+               subdir='species')
         print(f"    ({species_df.shape[0]} species)")

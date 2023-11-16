@@ -50,46 +50,25 @@ from get_species import get_species
 from get_bc_codes import get_bc_codes
 from constants import *
 
-# -- Country, subnational1, subnational2, or location code --
+#-- Country, subnational1, subnational2, or location code --
 # Will be reset by cli arguments
 REGION_CODE = 'L164543' # North Vancouver--Maplewood Conservation Area
 
-# -- Default dates --
+#-- Default dates --
 # Will be reset by cli arguments
 START_DATE_STR = '' # If empty, set to the first day of the current month
 END_DATE_STR = '' # If empty, set to yesterday
 
-# -- Input/Output date format --
+#-- Input/Output date format --
 DATE_FORMAT = '%Y-%m-%d' # ISO 8601 format: YYYY-MM-DD
 
-# -- Primary key --
-PRIMARY_KEY = 'speciesCode' # should be the same in the historical and the merged
-
-# -- Selected columns in the historical data --
+#-- Selected columns in the historical data --
 COUNT_COL_NAME = 'howMany'
 SELECTED_COLUMNS = ['speciesCode', 'comName', 'sciName', COUNT_COL_NAME]
 
-# -- Columns for export --
+#-- Columns for export --
 EXPORT_COUNT_COL_NAME = 'count'
 EXPORT_COLUMNS = ['speciesCode', 'comName', 'sciName', EXPORT_COUNT_COL_NAME]
-
-# -- Map the columns from taxonomy data to the merged table --
-COLUMN_NAME_DICT = {
-    'SPECIES_CODE'   : PRIMARY_KEY,
-    'COMMON_NAME'    : 'comName',
-    'SCIENTIFIC_NAME': 'sciName'
-}
-
-# -- Export files --
-# filename without suffix
-EXPORT_FILE = {
-    'species'   : "species_ebird_{region_code}",
-    'historical': "obs_ebird_{start_date}",
-    'merged'    : "obs_ebird_{start_date}--{end_date}",
-}
-
-EXPORT_TABLE_BC = "species_codes_bc"
-EXPORT_TABLE_MERGED = "species_merged_{region_code}"
 
 ###############################################################################|
 def main():
@@ -145,7 +124,7 @@ def main():
     #--------------------------------------------------------------------------|
     species_df = pd.DataFrame()
     if not download_species:
-        input_file = f"species/{EXPORT_FILE['species'].format(region_code=region_code)}.csv"
+        input_file = f"species/{EXPORT_FILE['species_merged'].format(region_code=region_code)}.csv"
         try:
             # Read species codes (bc codes included)
             species_df = pd.read_csv(input_file, sep=',', header=0,
@@ -163,16 +142,16 @@ def main():
     if species_df.empty:
         species_df = get_species(session, URL_DICT, region_code, headers)
         export(species_df, 'csv',
-               EXPORT_FILE['species'].format(region_code=region_code),
+               EXPORT_FILE['species_ebird'].format(region_code=region_code),
                subdir='species')
         print(f"    ({species_df.shape[0]} species)")
         
         #-- Get the species codes from www.birdatlas.bc.ca --------------------|
-        merged_df = get_bc_codes(session)
+        merged_df = get_bc_codes(session, region_code)
         if not merged_df.empty:
             # Export to CSV
             export(merged_df, 'csv',
-                   EXPORT_TABLE_MERGED.format(region_code=region_code),
+                   EXPORT_FILE['species_merged'].format(region_code=region_code),
                    subdir='species')
             print(f"    ({merged_df.shape[0]} species)")
         
@@ -182,7 +161,7 @@ def main():
     #--------------------------------------------------------------------------|
     # Download obervation data
     #--------------------------------------------------------------------------|
-    query_type = 'historical'
+    query_type = 'obs'
     current_date = end_date
     print("Downloading obervation data...")
     while current_date >= start_date:
@@ -201,7 +180,7 @@ def main():
                 data = response.json()
                 if data:
                     df = pd.DataFrame(data)
-                    # -- Export daily data --------------------------------- --|
+                    #-- Export daily data -------------------------------------|
                     if download_daily:
                         for fmt in export_formats:
                             export(data if fmt == 'json' else df, fmt,
@@ -210,11 +189,11 @@ def main():
                             print(f"    ({df.shape[0]} rows x {df.shape[1]} columns)")
                     #-- Merge columns -----------------------------------------|
                     # 'howMany' -> 'howMany','howMany_day1', 'howMany_day2', ...
-                    merged_df = pd.merge(merged_df, df[[PRIMARY_KEY, COUNT_COL_NAME]],
-                                         on=PRIMARY_KEY, how='left',
+                    merged_df = pd.merge(merged_df, df[[CODE_EBIRD, COUNT_COL_NAME]],
+                                         on=CODE_EBIRD, how='left',
                                          suffixes=('', f'_{day}'))
                     #-- Append missing rows -----------------------------------|
-                    missing_mask = ~df[PRIMARY_KEY].isin(merged_df[PRIMARY_KEY])
+                    missing_mask = ~df[CODE_EBIRD].isin(merged_df[CODE_EBIRD])
                     if missing_mask.any():
                         new_rows = df.loc[missing_mask, SELECTED_COLUMNS]
                         merged_df = pd.concat([merged_df, new_rows], ignore_index=True)
@@ -238,7 +217,7 @@ def main():
         print(f"Merged:")
         for fmt in export_formats:
             export(merged_df[EXPORT_COLUMNS], fmt,
-                   EXPORT_FILE['merged'].format(start_date=date0_str, end_date=date1_str),
+                   EXPORT_FILE['historical_merged'].format(start_date=date0_str, end_date=date1_str),
                    subdir=os.path.join(fmt, region_code, str(last_date.year)))
         print(f"    ({merged_df.shape[0]} rows x {merged_df.shape[1]} columns)")
 
