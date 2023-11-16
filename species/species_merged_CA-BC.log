@@ -3,6 +3,8 @@ Connecting...
     (345 species)
 
 Read data from 'species/species_ebird_CA-BC.csv'.
+  ['speciesCode', 'comNameCode', 'bandingCode', 'sciNameCode', 'comName', 'sciName']
+
 > No match:
   BARG, BAGO, bargoo, Barnacle Goose (ebird)
 > No match:
@@ -39,40 +41,40 @@ Read data from 'species/species_ebird_CA-BC.csv'.
   LCSP, Le Conte's Sparrow (bc) -- LCSP, LeConte's Sparrow (ebird)
 
 Missing bc codes:
-    alphaCode_bc  ... comName_ebird
-345         <NA>  ...          <NA>
-347         <NA>  ...          <NA>
-352         <NA>  ...          <NA>
-356         <NA>  ...          <NA>
-346         <NA>  ...          <NA>
-349         <NA>  ...          <NA>
-348         <NA>  ...          <NA>
-357         <NA>  ...          <NA>
-353         <NA>  ...          <NA>
-355         <NA>  ...          <NA>
-350         <NA>  ...          <NA>
-351         <NA>  ...          <NA>
-354         <NA>  ...          <NA>
+    alphaCode_bc  ...                                 sciName
+356         <NA>  ...                        Branta leucopsis
+363         <NA>  ...                          Cygnus atratus
+409         <NA>  ...  Bucephala albeola x clangula/islandica
+516         <NA>  ...                         Ardenna bulleri
+357         <NA>  ...                       Branta hutchinsii
+..           ...  ...                                     ...
+633         <NA>  ...                      Passerina caerulea
+634         <NA>  ...               Passerina amoena x cyanea
+635         <NA>  ...                         Passerina ciris
+636         <NA>  ...                         Spiza americana
+637         <NA>  ...                        Sicalis flaveola
 
-[13 rows x 6 columns]
-(13 entries)
+[293 rows x 7 columns]
 
 Missing ebird codes:
-    alphaCode_bc bandingCode  ...                        comName comName_ebird
-92          COFL        <NA>  ...         Cordilleran Flycatcher          <NA>
-106         CROW        <NA>  ...  American or Northwestern Crow          <NA>
-169         LEBI        <NA>  ...                  Least Bittern          <NA>
-186         MEGU        <NA>  ...                       Mew Gull          <NA>
-199         NOCR        <NA>  ...              Northwestern Crow          <NA>
-202         NOGO        <NA>  ...               Northern Goshawk          <NA>
-232         PSFL        <NA>  ...       Pacific-slope Flycatcher          <NA>
-263         SAHY        <NA>  ...               Sapsucker hybrid          <NA>
-265         SAPS        <NA>  ...              Unknown Sapsucker          <NA>
-272         SKLA        <NA>  ...                       Sky Lark          <NA>
-327         WIWR        <NA>  ...            Pacific/Winter Wren          <NA>
-329         WSJA        <NA>  ...              Western Scrub-Jay          <NA>
+    alphaCode_bc bandingCode  ... comName_ebird sciName
+92          COFL        <NA>  ...          <NA>    <NA>
+106         CROW        <NA>  ...          <NA>    <NA>
+169         LEBI        <NA>  ...          <NA>    <NA>
+186         MEGU        <NA>  ...          <NA>    <NA>
+199         NOCR        <NA>  ...          <NA>    <NA>
+202         NOGO        <NA>  ...          <NA>    <NA>
+232         PSFL        <NA>  ...          <NA>    <NA>
+263         SAHY        <NA>  ...          <NA>    <NA>
+265         SAPS        <NA>  ...          <NA>    <NA>
+272         SKLA        <NA>  ...          <NA>    <NA>
+327         WIWR        <NA>  ...          <NA>    <NA>
+329         WSJA        <NA>  ...          <NA>    <NA>
 
-[12 rows x 6 columns]
-(12 entries)
+[12 rows x 7 columns]
+
+Merged:
+  ['alphaCode_bc', 'bandingCode', 'comNameCode', 'speciesCode', 'comName', 'comName_ebird', 'sciName']
+
 --> Exported to: species/species_merged_CA-BC.csv
-    (358 species)
+    (638 species)

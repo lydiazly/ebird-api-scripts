@@ -16,9 +16,6 @@ from io import StringIO
 from modules.export_func import export
 from constants import *
 
-REGION_CODE = 'CA-BC'
-# REGION_CODE = 'L164543'
-
 ###############################################################################|
 def get_species(session: requests.Session, url_dict: dict, region_code: str, headers: dict) -> pd.DataFrame:
     species_df = pd.DataFrame()
@@ -59,7 +56,7 @@ def get_species(session: requests.Session, url_dict: dict, region_code: str, hea
     species_list.extend(subspecies_list)
     
     #-- Download names --------------------------------------------------------|
-    query_type = 'taxonomy'
+    query_type = 'taxa'
     print(f"Downloading names from '{url_dict[query_type]}' ...")
     df_names = []
     for species_code in species_list:
@@ -76,6 +73,7 @@ def get_species(session: requests.Session, url_dict: dict, region_code: str, hea
             sys.exit(f"GET request failed.\nURL: {url_full}\nStatus code: {response.status_code}")
     
     species_df = pd.concat(df_names, axis=0)
+    print(f"{species_df.columns.to_list()}\n")
     
     return species_df
 
@@ -86,8 +84,8 @@ if __name__ == '__main__':
     #--------------------------------------------------------------------------|
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument('--region', nargs='?', default=REGION_CODE, help='location code (default: %(default)s)')
-    parser.add_argument('--api', nargs='?', default=API_KEY, help=f"API key, read from file '{API_FILE}' if not specified")
+    parser.add_argument('--region', nargs=1, default=REGION_CODE_SPC, help='location code (default: %(default)s)')
+    parser.add_argument('--api', nargs=1, default=API_KEY, help=f"API key, read from file '{API_FILE}' if not specified")
     args = parser.parse_args()
     
     region_code = args.region

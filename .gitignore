@@ -165,5 +165,6 @@ csv/**
 json/**
 test/**
 *_test.py
+test.py
 *.bk
 tmp.*

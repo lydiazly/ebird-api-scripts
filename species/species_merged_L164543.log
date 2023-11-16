@@ -1,0 +1,74 @@
+Connecting...
+--> Exported to: species/species_codes_bc.csv
+    (345 species)
+
+Read data from 'species/species_ebird_L164543.csv'.
+  ['speciesCode', 'comNameCode', 'bandingCode', 'sciNameCode', 'comName', 'sciName']
+
+> No match:
+  CACG, CAGO, cacgoo1, Cackling Goose (ebird)
+> Merged tuple:
+  WEFL, Cordilleran or Pacific-slope Flycatcher (Western) (bc) -- WEFL, Western Flycatcher (ebird)
+
+Missing bc codes:
+    alphaCode_bc bandingCode  ... comName_ebird                           sciName
+346         <NA>        CACG  ...          <NA>                 Branta hutchinsii
+345         <NA>        GWFG  ...          <NA>                   Anser albifrons
+347         <NA>        TUSW  ...          <NA>                Cygnus columbianus
+348         <NA>        <NA>  ...          <NA>       Mareca penelope x americana
+349         <NA>        <NA>  ...          <NA>        Anas platyrhynchos x acuta
+350         <NA>        BLSC  ...          <NA>               Melanitta americana
+351         <NA>        <NA>  ...          <NA>    Bucephala clangula x islandica
+352         <NA>        BBPL  ...          <NA>              Pluvialis squatarola
+353         <NA>        WHIM  ...          <NA>                 Numenius phaeopus
+354         <NA>        MAGO  ...          <NA>                      Limosa fedoa
+355         <NA>        LBDO  ...          <NA>           Limnodromus scolopaceus
+356         <NA>        WILL  ...          <NA>                Tringa semipalmata
+357         <NA>        BLTU  ...          <NA>            Arenaria melanocephala
+358         <NA>        BBSA  ...          <NA>            Calidris subruficollis
+359         <NA>        SAND  ...          <NA>                     Calidris alba
+360         <NA>        DUNL  ...          <NA>                   Calidris alpina
+361         <NA>        PESA  ...          <NA>                Calidris melanotos
+362         <NA>        WESA  ...          <NA>                    Calidris mauri
+363         <NA>        SESA  ...          <NA>                  Calidris pusilla
+364         <NA>        SAGU  ...          <NA>                       Xema sabini
+365         <NA>        SBIG  ...          <NA>              Larus brachyrhynchus
+366         <NA>        GLGU  ...          <NA>                 Larus hyperboreus
+367         <NA>        <NA>  ...          <NA>    Larus argentatus x glaucescens
+368         <NA>        ICGU  ...          <NA>                  Larus glaucoides
+369         <NA>        YBLO  ...          <NA>                     Gavia adamsii
+370         <NA>        AGOS  ...          <NA>            Accipiter atricapillus
+371         <NA>        RLHA  ...          <NA>                     Buteo lagopus
+372         <NA>        WEFL  ...          <NA>              Empidonax difficilis
+373         <NA>        ATFL  ...          <NA>             Myiarchus cinerascens
+374         <NA>        TRKI  ...          <NA>            Tyrannus melancholicus
+375         <NA>        CASJ  ...          <NA>            Aphelocoma californica
+376         <NA>        BGGN  ...          <NA>               Polioptila caerulea
+377         <NA>        LALO  ...          <NA>              Calcarius lapponicus
+378         <NA>        CCLO  ...          <NA>                 Calcarius ornatus
+379         <NA>        HASP  ...          <NA>               Zonotrichia querula
+380         <NA>        <NA>  ...          <NA>  Setophaga nigrescens x townsendi
+
+[36 rows x 7 columns]
+
+Missing ebird codes:
+    alphaCode_bc bandingCode  ... comName_ebird sciName
+0           ABDU        <NA>  ...          <NA>    <NA>
+1           AGPL        <NA>  ...          <NA>    <NA>
+2           ALFL        <NA>  ...          <NA>    <NA>
+3           AMAV        <NA>  ...          <NA>    <NA>
+15          ANMU        <NA>  ...          <NA>    <NA>
+..           ...         ...  ...           ...     ...
+337         YBCH        <NA>  ...          <NA>    <NA>
+338         YBCU        <NA>  ...          <NA>    <NA>
+339         YBFL        <NA>  ...          <NA>    <NA>
+340         YBSA        <NA>  ...          <NA>    <NA>
+341         YERA        <NA>  ...          <NA>    <NA>
+
+[125 rows x 7 columns]
+
+Merged:
+  ['alphaCode_bc', 'bandingCode', 'comNameCode', 'speciesCode', 'comName', 'comName_ebird', 'sciName']
+
+--> Exported to: species/species_merged_L164543.csv
+    (381 species)

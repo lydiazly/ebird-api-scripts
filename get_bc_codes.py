@@ -24,9 +24,6 @@ from constants import *
 # URL = "https://www.birdatlas.bc.ca/bcdata/codes.jsp?lang=en&pg=species&sortorder=codes"
 URL = URL_DICT['bc']
 
-REGION_CODE = 'CA-BC'
-# REGION_CODE = 'L164543'
-
 RENAME_DICT = {
     'speciesCode': 'speciesCode_ebird',
     'bandingCode': 'bandingCode_ebird',
@@ -75,7 +72,7 @@ def get_bc_codes(session: requests.Session, region_code: str) -> pd.DataFrame:
                             # print(f"{code} -- {name}")
                             codes.append(code)
                             names.append(name)
-                df = pd.DataFrame({COLUMN_NAMES_BC[0]: codes, COLUMN_NAMES_BC[1]: names})
+                df = pd.DataFrame({SPC_COL_NAMES_BC[0]: codes, SPC_COL_NAMES_BC[1]: names})
 
                 # Export to CSV
                 export(df, 'csv', EXPORT_FILE['codes_bc'], subdir='species')
@@ -89,6 +86,7 @@ def get_bc_codes(session: requests.Session, region_code: str) -> pd.DataFrame:
                                            quoting=csv.QUOTE_NONNUMERIC,
                                            encoding='utf-8')
                     print(f"\nRead data from '{table_ebird}'.")
+                    print(f"  {ebird_df.columns.to_list()}\n")
                     
                     # Split names by ' or ' or '/'
                     name_tmp = NAME_BC + '_tmp'
@@ -105,6 +103,7 @@ def get_bc_codes(session: requests.Session, region_code: str) -> pd.DataFrame:
                                      quoting=csv.QUOTE_NONNUMERIC,
                                      lineterminator='\n',
                                      encoding='utf-8')
+                    merged_df = merged_df.astype("string")
                     
                     # Copy names
                     merged_df[NAME_EBIRD] = merged_df[NAME_BC]
@@ -113,7 +112,6 @@ def get_bc_codes(session: requests.Session, region_code: str) -> pd.DataFrame:
                     cols_ebird = [col for col in ebird_df.columns if col != NAME_BC]
                     
                     # Check missing
-                    merged_df = merged_df.astype("string")
                     missing_ids = merged_df.index[merged_df[bc_key_tmp].isna()].to_list()
                     for idx in missing_ids:
                         name_ebird = str(merged_df.loc[idx, NAME_BC]).strip()
@@ -149,13 +147,13 @@ def get_bc_codes(session: requests.Session, region_code: str) -> pd.DataFrame:
                                 break
                     
                     # Drop extra entries
-                    merged_df = merged_df.dropna(subset=bc_key_tmp)
+                    # merged_df = merged_df.dropna(subset=bc_key_tmp)
                     
                     # Drop duplicate columns and reset index
                     merged_df = merged_df.drop_duplicates().reset_index(drop=True)
                     
                     # Sort
-                    merged_df = merged_df.sort_values(bc_key_tmp)[EXPORT_COLUMN_NAMES]
+                    merged_df = merged_df.sort_values(bc_key_tmp)[EXPORT_SPC_COL_NAMES]
                     
                     # Rename
                     # merged_df = merged_df.rename(columns=RENAME_DICT)
@@ -173,11 +171,13 @@ def get_bc_codes(session: requests.Session, region_code: str) -> pd.DataFrame:
                     if not missing_bc.empty:
                         print("\nMissing bc codes:")
                         print(missing_bc)
-                        print(f"({missing_bc.shape[0]} entries)")
+                        # print(f"({missing_bc.shape[0]} entries)")
                     if not missing_ebird.empty:
                         print("\nMissing ebird codes:")
                         print(missing_ebird)
-                        print(f"({missing_ebird.shape[0]} entries)")
+                        # print(f"({missing_ebird.shape[0]} entries)")
+                    print("\nMerged:")
+                    print(f"  {merged_df.columns.to_list()}\n")
                     
                 except FileNotFoundError:
                     print(f"'{table_ebird}' is not found. Skip merging.")
@@ -194,7 +194,7 @@ if __name__ == '__main__':
     #--------------------------------------------------------------------------|
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument('--region', nargs='?', default=REGION_CODE, help='location code (default: %(default)s)')
+    parser.add_argument('--region', nargs=1, default=REGION_CODE_SPC, help='location code (default: %(default)s)')
     args = parser.parse_args()
     
     region_code = args.region

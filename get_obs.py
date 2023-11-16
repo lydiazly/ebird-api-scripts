@@ -31,7 +31,7 @@ TODO:
 [x] Session
 [x] Subspecies
 [x] Merge BC code
-[ ] Organize the code
+[x] Organize the code
 [ ] Google sheets
 """
 # 2023-11-09 created by Lydia
@@ -50,10 +50,6 @@ from get_species import get_species
 from get_bc_codes import get_bc_codes
 from constants import *
 
-#-- Country, subnational1, subnational2, or location code --
-# Will be reset by cli arguments
-REGION_CODE = 'L164543' # North Vancouver--Maplewood Conservation Area
-
 #-- Default dates --
 # Will be reset by cli arguments
 START_DATE_STR = '' # If empty, set to the first day of the current month
@@ -61,14 +57,6 @@ END_DATE_STR = '' # If empty, set to yesterday
 
 #-- Input/Output date format --
 DATE_FORMAT = '%Y-%m-%d' # ISO 8601 format: YYYY-MM-DD
-
-#-- Selected columns in the historical data --
-COUNT_COL_NAME = 'howMany'
-SELECTED_COLUMNS = ['speciesCode', 'comName', 'sciName', COUNT_COL_NAME]
-
-#-- Columns for export --
-EXPORT_COUNT_COL_NAME = 'count'
-EXPORT_COLUMNS = ['speciesCode', 'comName', 'sciName', EXPORT_COUNT_COL_NAME]
 
 ###############################################################################|
 def main():
@@ -83,9 +71,9 @@ def main():
     parser.add_argument('end_date', nargs='?', default=end_date.strftime(DATE_FORMAT), help="format: YYYY-MM-DD (default: %(default)s)")
     parser.add_argument('-f', dest='formats', metavar='FORMAT', nargs='+', default=('csv',), choices={'csv', 'json'},
                         help='export format of observation data: {%(choices)s} (default: %(default)s)')
-    parser.add_argument('--region', nargs='?', default=REGION_CODE, help='location code (default: %(default)s)')
-    parser.add_argument('--api', nargs='?', default=API_KEY, help=f"API key, read from file '{API_FILE}' if not specified")
-    parser.add_argument('-s', '--species', action='store_true', help="only download species list (default: %(default)s)")
+    parser.add_argument('--region', nargs=1, default=REGION_CODE_OBS, help='location code (default: %(default)s)')
+    parser.add_argument('--api', nargs=1, default=API_KEY, help=f"API key, read from file '{API_FILE}' if not specified")
+    parser.add_argument('-s', '--species', action='store_true', help="download species list then exit (default: %(default)s)")
     parser.add_argument('-d', '--daily', action='store_true', help='store daily data in JSON or CSV format (default: %(default)s)')
     args = parser.parse_args()
     
@@ -146,14 +134,14 @@ def main():
                subdir='species')
         print(f"    ({species_df.shape[0]} species)")
         
-        #-- Get the species codes from www.birdatlas.bc.ca --------------------|
-        merged_df = get_bc_codes(session, region_code)
-        if not merged_df.empty:
+        #-- Get the alpha codes from www.birdatlas.bc.ca ----------------------|
+        species_df = get_bc_codes(session, region_code)
+        if not species_df.empty:
             # Export to CSV
-            export(merged_df, 'csv',
+            export(species_df, 'csv',
                    EXPORT_FILE['species_merged'].format(region_code=region_code),
                    subdir='species')
-            print(f"    ({merged_df.shape[0]} species)")
+            print(f"    ({species_df.shape[0]} species)")
         
         if download_species:
             sys.exit(0)
@@ -168,7 +156,7 @@ def main():
         merged_df = species_df
         merged_df[COUNT_COL_NAME] = 0
         last_date = current_date
-        print(f"== {last_date.strftime('%B, %Y')} ==")
+        print(f"\n== {last_date.strftime('%B, %Y')} ==")
         # For each month
         while current_date.month == last_date.month:
             day, month, year = current_date.day, current_date.month, current_date.year
@@ -186,16 +174,20 @@ def main():
                             export(data if fmt == 'json' else df, fmt,
                                    EXPORT_FILE[query_type].format(start_date=current_date.strftime(DATE_FORMAT)),
                                    subdir=os.path.join(fmt, region_code, str(year), str(month)))
-                            print(f"    ({df.shape[0]} rows x {df.shape[1]} columns)")
+                        print(f"    ({df.shape[0]} rows x {df.shape[1]} columns)")
                     #-- Merge columns -----------------------------------------|
                     # 'howMany' -> 'howMany','howMany_day1', 'howMany_day2', ...
-                    merged_df = pd.merge(merged_df, df[[CODE_EBIRD, COUNT_COL_NAME]],
+                    cols = [CODE_EBIRD, COUNT_COL_NAME]
+                    for col in df.columns:
+                        if col in EXTRA_COL_NAMES:
+                            cols.append(col)
+                    merged_df = pd.merge(merged_df, df[cols],
                                          on=CODE_EBIRD, how='left',
-                                         suffixes=('', f'_{day}'))
+                                         suffixes=['', f'_{day}'])
                     #-- Append missing rows -----------------------------------|
                     missing_mask = ~df[CODE_EBIRD].isin(merged_df[CODE_EBIRD])
                     if missing_mask.any():
-                        new_rows = df.loc[missing_mask, SELECTED_COLUMNS]
+                        new_rows = df.loc[missing_mask, OBS_COL_NAMES]
                         merged_df = pd.concat([merged_df, new_rows], ignore_index=True)
                         print("Appended: ", new_rows['speciesCode'].to_list())
             else:
@@ -211,13 +203,22 @@ def main():
         #-- Sum the 'howMany_*' columns ---------------------------------------|
         merged_df[EXPORT_COUNT_COL_NAME] = merged_df[count_columns].sum(axis=1)
         
+        #-- Extra columns -----------------------------------------------------|
+        # Append all the non-null different values into one column
+        for extra_col in EXTRA_COL_NAMES:
+            extra_columns = [col for col in merged_df.columns if extra_col in col]
+            merged_df[extra_col] = merged_df[extra_columns].apply(lambda x: ' '.join(set(x.dropna())), axis=1)
+        
+        merged_df = merged_df[EXPORT_OBS_COL_NAMES]
+        
         #-- Export monthly data -----------------------------------------------|
         date0_str = last_date.replace(day=1).strftime(DATE_FORMAT) # First day of the month
         date1_str = last_date.strftime(DATE_FORMAT)
-        print(f"Merged:")
+        print("\nMerged:")
+        print(f"  {merged_df.columns.to_list()}\n")
         for fmt in export_formats:
-            export(merged_df[EXPORT_COLUMNS], fmt,
-                   EXPORT_FILE['historical_merged'].format(start_date=date0_str, end_date=date1_str),
+            export(merged_df, fmt,
+                   EXPORT_FILE['obs_merged'].format(start_date=date0_str, end_date=date1_str),
                    subdir=os.path.join(fmt, region_code, str(last_date.year)))
         print(f"    ({merged_df.shape[0]} rows x {merged_df.shape[1]} columns)")
 

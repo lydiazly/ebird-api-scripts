@@ -45,6 +45,7 @@
 "falduc","","FADU","MAFA","Falcated Duck","Mareca falcata"
 "eurwig","","EUWI","MAPE","Eurasian Wigeon","Mareca penelope"
 "amewig","","AMWI","MAAM","American Wigeon","Mareca americana"
+"x00724","AMWI GADW","","MAST MAAM","Gadwall x American Wigeon (hybrid)","Mareca strepera x americana"
 "x00421","AMWI EUWI","","MAPE MAAM","Eurasian x American Wigeon (hybrid)","Mareca penelope x americana"
 "mallar3","","MALL","ANPL","Mallard","Anas platyrhynchos"
 "mdxmal1","MUDU MALL","","ANPL CAMO","Muscovy Duck x Mallard (hybrid)","Cairina moschata x Anas platyrhynchos"
