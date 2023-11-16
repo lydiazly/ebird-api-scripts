@@ -1,0 +1,78 @@
+Connecting...
+--> Exported to: species/species_codes_bc.csv
+    (345 species)
+
+Read data from 'species/species_ebird_CA-BC.csv'.
+> No match:
+  BARG, BAGO, bargoo, Barnacle Goose (ebird)
+> No match:
+  CACG, CAGO, cacgoo1, Cackling Goose (ebird)
+> No match:
+  <NA>, BLSW, blkswa, Black Swan (ebird)
+> No match:
+  COMP, COPO, compoc, Common Pochard (ebird)
+> No match:
+  <NA>, CANV, x00377, Canvasback x scaup sp. (hybrid) (ebird)
+> No match:
+  <NA>, REDH, x00681, Redhead x scaup sp. (hybrid) (ebird)
+> No match:
+  <NA>, RNDU, x00682, Ring-necked Duck x scaup sp. (hybrid) (ebird)
+> No match:
+  <NA>, BUFF, x00909, Bufflehead x goldeneye sp. (hybrid) (ebird)
+> No match:
+  HELG, HEGU, helgui, Helmeted Guineafowl (ebird)
+> No match. Possible related names:
+  Ruffed Grouse (bc), Ruff (ebird)
+> No match:
+  HEEG, HEGU, heegul, Heermann's Gull (ebird)
+> No match:
+  BULS, BUSH, bulshe, Buller's Shearwater (ebird)
+> Merged tuple:
+  BCNH, Black-crowned Night-Heron (bc) -- BCNH, Black-crowned Night Heron (ebird)
+> No match:
+  HAHA, <NA>, hrshaw, Harris's Hawk (ebird)
+> Merged tuple:
+  WEFL, Cordilleran or Pacific-slope Flycatcher (Western) (bc) -- WEFL, Western Flycatcher (ebird)
+> Merged tuple:
+  GRJA, Gray Jay (bc) -- GRJA, Canada Jay (ebird)
+> Merged tuple:
+  LCSP, Le Conte's Sparrow (bc) -- LCSP, LeConte's Sparrow (ebird)
+
+Missing bc codes:
+    alphaCode_bc  ... comName_ebird
+345         <NA>  ...          <NA>
+347         <NA>  ...          <NA>
+352         <NA>  ...          <NA>
+356         <NA>  ...          <NA>
+346         <NA>  ...          <NA>
+349         <NA>  ...          <NA>
+348         <NA>  ...          <NA>
+357         <NA>  ...          <NA>
+353         <NA>  ...          <NA>
+355         <NA>  ...          <NA>
+350         <NA>  ...          <NA>
+351         <NA>  ...          <NA>
+354         <NA>  ...          <NA>
+
+[13 rows x 6 columns]
+(13 entries)
+
+Missing ebird codes:
+    alphaCode_bc bandingCode  ...                        comName comName_ebird
+92          COFL        <NA>  ...         Cordilleran Flycatcher          <NA>
+106         CROW        <NA>  ...  American or Northwestern Crow          <NA>
+169         LEBI        <NA>  ...                  Least Bittern          <NA>
+186         MEGU        <NA>  ...                       Mew Gull          <NA>
+199         NOCR        <NA>  ...              Northwestern Crow          <NA>
+202         NOGO        <NA>  ...               Northern Goshawk          <NA>
+232         PSFL        <NA>  ...       Pacific-slope Flycatcher          <NA>
+263         SAHY        <NA>  ...               Sapsucker hybrid          <NA>
+265         SAPS        <NA>  ...              Unknown Sapsucker          <NA>
+272         SKLA        <NA>  ...                       Sky Lark          <NA>
+327         WIWR        <NA>  ...            Pacific/Winter Wren          <NA>
+329         WSJA        <NA>  ...              Western Scrub-Jay          <NA>
+
+[12 rows x 6 columns]
+(12 entries)
+--> Exported to: species/species_merged_CA-BC.csv
+    (358 species)
