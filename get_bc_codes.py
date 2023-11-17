@@ -2,13 +2,13 @@
 # -*- coding: utf-8 -*-
 """
 Get the species codes from www.birdatlas.bc.ca, merge with eBird codes, and returns a table.
-[In]
+[In] species/species_merged_{REGION}.csv
 [Out] csv
 [Python] 3.8
 [Pkgs] pandas, beautifulsoup4
 """
 # 2023-11-11 created by Lydia
-# 2023-11-16 last modified by Lydia
+# 2023-11-17 last modified by Lydia
 ###############################################################################|
 import requests
 from bs4 import BeautifulSoup, NavigableString
@@ -157,7 +157,6 @@ def get_bc_codes(session: requests.Session, region_code: str) -> pd.DataFrame:
                     # Drop extra entries
                     # merged_df = merged_df.dropna(subset=bc_key_tmp)
                     
-                    
                     # Drop duplicate columns and reset index
                     merged_df = merged_df.drop_duplicates().reset_index(drop=True)
                     
@@ -183,7 +182,7 @@ def get_bc_codes(session: requests.Session, region_code: str) -> pd.DataFrame:
                     pd.set_option('display.show_dimensions', False)
                     
                     if not missing_bc.empty:
-                        print("\nMissing Bird Atlas BC codes:")
+                        print("\nMissing BC codes:")
                         print(missing_bc.fillna('')[[CODE_EBIRD, NAME_BC]])
                         print(f"({missing_bc.shape[0]} entries)")
                     if not missing_ebird.empty:
@@ -217,7 +216,7 @@ if __name__ == '__main__':
     #--------------------------------------------------------------------------|
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument('--region', default=REGION_CODE_SPC, help='location code (default: %(default)s)')
+    parser.add_argument('--region', default=REGION_CODE_SPC, help='Location code (default: %(default)s)')
     args = parser.parse_args()
     
     region_code = args.region

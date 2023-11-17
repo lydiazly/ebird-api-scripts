@@ -4,7 +4,7 @@
 User constants
 """
 # 2023-11-15 created by Lydia
-# 2023-11-16 last modified by Lydia
+# 2023-11-17 last modified by Lydia
 
 ###############################################################################|
 
@@ -12,7 +12,7 @@ User constants
 # (Can be reset by cli arguments)
 API_KEY = ''
 # The file contains the key
-API_FILE = "../eBird_API_Key.txt" # If the file does not exist, read from terminal
+API_FILE = "../eBird_API_Key.txt" # If the file does not exist, read from the terminal
 
 #-- Country, subnational1, subnational2, or location code ---------------------|
 # (Can be reset by cli arguments)
@@ -46,9 +46,9 @@ COUNT_COL  = 'howMany'
 EXTRA_COLS = ['exoticCategory',] # not in every table
 OBS_COLS   = ['speciesCode', 'comName', 'sciName', 'howMany']
 
-#-- Column names of Bird Atlas BC code and eBird code -------------------------|
-# CODE_EBIRD: the 'speciesCode' from ebird.org historical data
-# CODE_BC: the alpha/4-letter codes from www.birdatlas.bc.ca
+#-- Column names of BC codes and eBird codes ----------------------------------|
+# CODE_EBIRD: the 'speciesCode' from eBird historical data
+# CODE_BC: the alpha/4-letter codes from BC Breeding Bird Atlas
 CODE_EBIRD = 'speciesCode' # should be the same as in the historical data
 CODE_BC    = 'alphaCode_bc' # can be changed
 

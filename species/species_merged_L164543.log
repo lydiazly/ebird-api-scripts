@@ -1,4 +1,4 @@
-Connecting...
+Parsing HTML from https://www.birdatlas.bc.ca/bcdata/codes.jsp?lang=en&pg=species&sortorder=codes ...
 --> Exported to: species/species_codes_bc.csv
     (345 species)
 
@@ -10,7 +10,7 @@ Read data from 'species/species_ebird_L164543.csv'.
 > Merged tuple:
   WEFL, Cordilleran or Pacific-slope Flycatcher (Western) (bc) -- WEFL, Western Flycatcher (ebird)
 
-Missing Bird Atlas BC codes:
+Missing BC codes:
     speciesCode                                            comName
 346     cacgoo1                                     Cackling Goose
 370      norgos                                   American Goshawk

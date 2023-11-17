@@ -6,7 +6,7 @@ Retrieves species list in a region from ebird.org and returns a csv.
 [Pkgs] pandas
 """
 # 2023-11-11 created by Lydia
-# 2023-11-16 last modified by Lydia
+# 2023-11-17 last modified by Lydia
 ###############################################################################|
 import requests
 import pandas as pd
@@ -84,7 +84,7 @@ if __name__ == '__main__':
     #--------------------------------------------------------------------------|
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument('--region', default=REGION_CODE_SPC, help='location code (default: %(default)s)')
+    parser.add_argument('--region', default=REGION_CODE_SPC, help='Location code (default: %(default)s)')
     parser.add_argument('--api', default=API_KEY, help=f"API key, read from file '{API_FILE}' if not specified")
     args = parser.parse_args()
     

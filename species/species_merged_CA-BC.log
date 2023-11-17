@@ -1,11 +1,10 @@
-Connecting...
+Parsing HTML from https://www.birdatlas.bc.ca/bcdata/codes.jsp?lang=en&pg=species&sortorder=codes ...
 --> Exported to: species/species_codes_bc.csv
     (345 species)
 
 Read data from 'species/species_ebird_CA-BC.csv'.
   ['speciesCode', 'comNameCode', 'bandingCode', 'comName', 'sciNameCode', 'sciName', 'familyComName', 'familySciName', 'familyCode', 'order']
 
---> Exported to: species/tmp.csv
 > No match:
   BARG, BAGO, bargoo, Barnacle Goose (ebird)
 > No match:
@@ -39,7 +38,7 @@ Read data from 'species/species_ebird_CA-BC.csv'.
 > Merged tuple:
   LCSP, Le Conte's Sparrow (bc) -- LCSP, LeConte's Sparrow (ebird)
 
-Missing Bird Atlas BC codes:
+Missing BC codes:
     speciesCode                                    comName
 356      bargoo                             Barnacle Goose
 363      blkswa                                 Black Swan

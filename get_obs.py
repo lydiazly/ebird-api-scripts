@@ -4,21 +4,21 @@
 Retrieves observation data in a region from ebird.org and returns a table with monthly counts.
 - eBird API key is needed
 - 'X' and any other non-numeric values are ignored and will be counted as 0
-- If `species_dict.csv` exists, read from it unless `--species` is specified
+- If `--species` is specified, only download the species table
+- Import the existing species table by default
 
 [In] cli arguments (see `-h`)
 [Out] json, csv
 Directory structure:
 ├── {csv,json}/
-│   ├── {YYYY}/
+│   ├── {YEAR}/
 │   │   ├── obs_count_{YYYY-MM-DD}--{YYYY-MM-DD}.csv
 │   │   └── ...
 |   └── ...
 └── species/
     ├── species_codes_bc.csv
     ├── species_ebird_{REGION}.csv
-    ├── species_merged_{REGION}.csv
-    └── ...
+    └── species_merged_{REGION}.csv
 
 [Python] 3.8
 [Pkgs] requests, pandas
@@ -27,16 +27,11 @@ Directory structure:
   API key request: https://ebird.org/api/keygen
 
 TODO:
-[x] Read API key from file or terminal
-[x] Session
-[x] Subspecies
-[x] Merge BC code
-[x] Organize the code
 [ ] Google sheets
-[ ] Add comment column
+[ ] Import user modified entries
 """
 # 2023-11-09 created by Lydia
-# 2023-11-16 last modified by Lydia
+# 2023-11-17 last modified by Lydia
 ###############################################################################|
 import argparse
 from datetime import datetime, timedelta
@@ -68,15 +63,15 @@ def main():
     # Parse arguments
     #--------------------------------------------------------------------------|
     parser = argparse.ArgumentParser()
-    parser.add_argument('start_date', nargs='?', default=start_date.strftime(DATE_FORMAT), help="format: YYYY-MM-DD (default: %(default)s)")
-    parser.add_argument('end_date', nargs='?', default=end_date.strftime(DATE_FORMAT), help="format: YYYY-MM-DD (default: %(default)s)")
+    parser.add_argument('start_date', nargs='?', default=start_date.strftime(DATE_FORMAT), help="Format: YYYY-MM-DD (default: %(default)s)")
+    parser.add_argument('end_date', nargs='?', default=end_date.strftime(DATE_FORMAT), help="Format: YYYY-MM-DD (default: %(default)s)")
     parser.add_argument('-f', dest='formats', metavar='FORMAT', nargs='+', default=('csv',), choices={'csv', 'json'},
-                        help='export format of observation data: {%(choices)s} (default: %(default)s)')
-    parser.add_argument('--region', default=REGION_CODE_OBS, help='location code (default: %(default)s)')
+                        help='Export format of observation data: {%(choices)s} (default: %(default)s)')
+    parser.add_argument('--region', default=REGION_CODE_OBS, help='Location code (default: %(default)s)')
     parser.add_argument('--api', default=API_KEY, help=f"API key, read from file '{API_FILE}' if not specified")
-    parser.add_argument('-t', '--table', default=SPECIES_TABLE, help="use the species table in this file (default: %(default)s)")
-    parser.add_argument('-s', '--species', action='store_true', help="download species table then exit (default: %(default)s)")
-    parser.add_argument('-d', '--daily', action='store_true', help='store daily data in JSON or CSV format (default: %(default)s)')
+    parser.add_argument('-t', '--table', default=SPECIES_TABLE, help="Use the species table in this file (default: %(default)s)")
+    parser.add_argument('-s', '--species', action='store_true', help="Download species table then exit (default: %(default)s)")
+    parser.add_argument('-d', '--daily', action='store_true', help='Store daily data in JSON or CSV format (default: %(default)s)')
     args = parser.parse_args()
     
     export_formats = set(args.formats)
@@ -116,7 +111,7 @@ def main():
     species_df = pd.DataFrame()
     if not download_species:
         try:
-            # Read species codes (Bird Atlas BC codes included)
+            # Read species codes (BC codes included)
             species_df = pd.read_csv(species_file, sep=',', header=0,
                                      skipinitialspace=True,
                                      quoting=csv.QUOTE_NONNUMERIC,
