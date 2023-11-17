@@ -131,7 +131,7 @@ Output columns:
 ['alphaCode_bc', 'bandingCode', 'comNameCode', 'speciesCode', 'comName', 'comName_ebird', 'sciName']
 ```
 
-See this [sample](species_ebird_L164543.csv) and [output log](species_merged_CA-BC.log).
+See this [sample](species/species_ebird_L164543.csv) and [output log](species/species_merged_CA-BC.log).
 
 ## Directory structure
 
