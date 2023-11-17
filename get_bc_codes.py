@@ -125,7 +125,7 @@ def get_bc_codes(session: requests.Session, region_code: str) -> pd.DataFrame:
                         if not match_row.empty:
                             # Copy code for sorting
                             merged_df.loc[idx, bc_key_tmp] = match_row[CODE_BC].values[0] + '0'
-                            merged_df.loc[idx, COMMENT_COL] = 'Possibly related to the entry above.'
+                            merged_df.loc[idx, COMMENT_COL] = 'No match. Possibly related to the entry above.'
                             for name_bc in match_row[NAME_BC].to_list():
                                 print(f"> No match. Possibly related:\n  {name_bc} (bc), {name_ebird} (ebird)")
                             continue
@@ -142,7 +142,7 @@ def get_bc_codes(session: requests.Session, region_code: str) -> pd.DataFrame:
                                     # Add values to the match
                                     merged_df.loc[match_idx[0], NAME_EBIRD] = merged_df.loc[idx, NAME_BC]
                                     merged_df.loc[match_idx[0], cols_ebird] = merged_df.loc[idx, cols_ebird]
-                                    merged_df.loc[match_idx[0], COMMENT_COL] = 'At least one of the eBird codes matches the BC code. Merged.'
+                                    merged_df.loc[match_idx[0], COMMENT_COL] = 'At least one of the eBird codes matches the BC code. Data merged.'
                                     print("> Merged tuple:\n  {}, {} (bc) -- {}, {} (ebird)"
                                           .format(merged_df.loc[match_idx[0], CODE_BC], merged_df.loc[match_idx[0], NAME_BC],
                                                   code, name_ebird))
