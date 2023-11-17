@@ -6,7 +6,7 @@ Retrieves species list in a region from ebird.org and returns a csv.
 [Pkgs] pandas
 """
 # 2023-11-11 created by Lydia
-# 2023-11-15 last modified by Lydia
+# 2023-11-16 last modified by Lydia
 ###############################################################################|
 import requests
 import pandas as pd
@@ -65,8 +65,8 @@ def get_species(session: requests.Session, url_dict: dict, region_code: str, hea
         response = session.get(url_full, headers=headers)
         if response.status_code == 200:
             data = response.text
-            cols = list(COLUMN_NAME_DICT.keys())
-            df = pd.read_csv(StringIO(data), usecols=cols)[cols].rename(columns=COLUMN_NAME_DICT)
+            cols = list(TAXA_COLUMN_DICT.keys())
+            df = pd.read_csv(StringIO(data), usecols=cols)[cols].rename(columns=TAXA_COLUMN_DICT)
             print(f"{species_code} -- {df['comName'].item()}")
             df_names.append(df)
         else:
@@ -84,8 +84,8 @@ if __name__ == '__main__':
     #--------------------------------------------------------------------------|
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument('--region', nargs=1, default=REGION_CODE_SPC, help='location code (default: %(default)s)')
-    parser.add_argument('--api', nargs=1, default=API_KEY, help=f"API key, read from file '{API_FILE}' if not specified")
+    parser.add_argument('--region', default=REGION_CODE_SPC, help='location code (default: %(default)s)')
+    parser.add_argument('--api', default=API_KEY, help=f"API key, read from file '{API_FILE}' if not specified")
     args = parser.parse_args()
     
     region_code = args.region

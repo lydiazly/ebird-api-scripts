@@ -6,10 +6,9 @@ Get the species codes from www.birdatlas.bc.ca, merge with eBird codes, and retu
 [Out] csv
 [Python] 3.8
 [Pkgs] pandas, beautifulsoup4
-  conda install beautifulsoup4
 """
 # 2023-11-11 created by Lydia
-# 2023-11-15 last modified by Lydia
+# 2023-11-16 last modified by Lydia
 ###############################################################################|
 import requests
 from bs4 import BeautifulSoup, NavigableString
@@ -24,12 +23,6 @@ from constants import *
 # URL = "https://www.birdatlas.bc.ca/bcdata/codes.jsp?lang=en&pg=species&sortorder=codes"
 URL = URL_DICT['bc']
 
-RENAME_DICT = {
-    'speciesCode': 'speciesCode_ebird',
-    'bandingCode': 'bandingCode_ebird',
-    'comNameCode': 'comNameCode_ebird',
-}
-
 #-- eBird codes table --
 TABLE_EBIRD = f"species/{EXPORT_FILE['species_ebird']}.csv"
 
@@ -41,9 +34,8 @@ HEADERS = {
 def get_bc_codes(session: requests.Session, region_code: str) -> pd.DataFrame:
     merged_df = pd.DataFrame()
     table_ebird = TABLE_EBIRD.format(region_code=region_code)
-    code_ebird_name = CODE_EBIRD
     
-    print("Connecting...")
+    print(f"Parsing HTML from {URL} ...")
 
     # Send an HTTP GET request
     response = session.get(URL, headers=HEADERS)
@@ -72,7 +64,7 @@ def get_bc_codes(session: requests.Session, region_code: str) -> pd.DataFrame:
                             # print(f"{code} -- {name}")
                             codes.append(code)
                             names.append(name)
-                df = pd.DataFrame({SPC_COL_NAMES_BC[0]: codes, SPC_COL_NAMES_BC[1]: names})
+                df = pd.DataFrame({SPC_COLS_BC[0]: codes, SPC_COLS_BC[1]: names})
 
                 # Export to CSV
                 export(df, 'csv', EXPORT_FILE['codes_bc'], subdir='species')
@@ -88,10 +80,17 @@ def get_bc_codes(session: requests.Session, region_code: str) -> pd.DataFrame:
                     print(f"\nRead data from '{table_ebird}'.")
                     print(f"  {ebird_df.columns.to_list()}\n")
                     
-                    # Split names by ' or ' or '/'
+                    # Rewrite names and store them temporarily for search
+                    # 'A or B C', 'A/B C' --> 'A C/B C' --> two columns 'A C' and 'B C'
                     name_tmp = NAME_BC + '_tmp'
                     df[name_tmp] = df[NAME_BC] \
-                                    .apply(lambda x: re.sub(r'^(\w+)( or |\/)(\w+) (\w+)', r'\1 \4\2\3 \4', x))
+                        .apply(lambda x: re.sub(r'^(.+) (or|x) (.+) ([^ \(\)]+)( \([^\)]+\))?$',
+                                                r'\1 \4 \2 \3 \4\5', x))
+                    df[name_tmp] = df[name_tmp] \
+                        .apply(lambda x: re.sub(r'^(.+)(\/)(.+) ([^ \(\)]+)( \([^\)]+\))?$',
+                                                r'\1 \4\2\3 \4\5', x))
+                    
+                    # df[[name_tmp, name_tmp2]] = df[name_tmp].str.split('/',expand=True)
                     
                     # Copy the primary key for further sorting
                     bc_key_tmp = CODE_BC + '_tmp'
@@ -108,22 +107,29 @@ def get_bc_codes(session: requests.Session, region_code: str) -> pd.DataFrame:
                     # Copy names
                     merged_df[NAME_EBIRD] = merged_df[NAME_BC]
                     
-                    # Find the rows without bc codes
+                    # Add a comment column
+                    merged_df[COMMENT_COL] = ''
+                    
+                    # export(merged_df, 'csv', 'tmp', subdir='species')
+                    
+                    # Find the rows without BC codes
                     cols_ebird = [col for col in ebird_df.columns if col != NAME_BC]
                     
                     # Check missing
                     missing_ids = merged_df.index[merged_df[bc_key_tmp].isna()].to_list()
                     for idx in missing_ids:
                         name_ebird = str(merged_df.loc[idx, NAME_BC]).strip()
-                        # Maybe matches one of the names in '... or ...' or '.../...'
-                        match_row = df[df[name_tmp].str.contains(name_ebird, regex=False)]
+                        # Maybe the name matches one of the '... or ...', '.../...', or '... x ... (hybrid)'
+                        escaped_text = re.escape(name_ebird)
+                        match_row = df[df[name_tmp].str.contains(fr"\b{escaped_text}\b", regex=True)]
                         if not match_row.empty:
                             # Copy code for sorting
                             merged_df.loc[idx, bc_key_tmp] = match_row[CODE_BC].values[0] + '0'
+                            merged_df.loc[idx, COMMENT_COL] = 'Possibly related to the entry above.'
                             for name_bc in match_row[NAME_BC].to_list():
-                                print(f"> No match. Possible related names:\n  {name_bc} (bc), {name_ebird} (ebird)")
+                                print(f"> No match. Possibly related:\n  {name_bc} (bc), {name_ebird} (ebird)")
                             continue
-                        # Maybe one of the other codes matches
+                        # Maybe the code matches one of the other codes
                         code1 = merged_df.loc[idx, CODE_REF1]
                         code2 = merged_df.loc[idx, CODE_REF2]
                         code_list = []
@@ -136,12 +142,14 @@ def get_bc_codes(session: requests.Session, region_code: str) -> pd.DataFrame:
                                     # Add values to the match
                                     merged_df.loc[match_idx[0], NAME_EBIRD] = merged_df.loc[idx, NAME_BC]
                                     merged_df.loc[match_idx[0], cols_ebird] = merged_df.loc[idx, cols_ebird]
+                                    merged_df.loc[match_idx[0], COMMENT_COL] = 'At least one of the eBird codes matches the BC code. Merged.'
                                     print("> Merged tuple:\n  {}, {} (bc) -- {}, {} (ebird)"
                                           .format(merged_df.loc[match_idx[0], CODE_BC], merged_df.loc[match_idx[0], NAME_BC],
                                                   code, name_ebird))
                                 else:
                                     # Copy code for sorting
                                     merged_df.loc[idx, bc_key_tmp] = str(merged_df.loc[match_idx[0], CODE_BC]) + '0'
+                                    merged_df.loc[idx, COMMENT_COL] = 'At least one of the eBird codes matches the BC code above, but different taxa.'
                                     print("> No match:\n  {}, {}, {}, {} (ebird)"
                                           .format(code1, code2, merged_df.loc[idx, CODE_EBIRD], name_ebird))
                                 break
@@ -149,38 +157,53 @@ def get_bc_codes(session: requests.Session, region_code: str) -> pd.DataFrame:
                     # Drop extra entries
                     # merged_df = merged_df.dropna(subset=bc_key_tmp)
                     
+                    
                     # Drop duplicate columns and reset index
                     merged_df = merged_df.drop_duplicates().reset_index(drop=True)
                     
-                    # Sort
-                    merged_df = merged_df.sort_values(bc_key_tmp)[EXPORT_SPC_COL_NAMES]
-                    
-                    # Rename
-                    # merged_df = merged_df.rename(columns=RENAME_DICT)
-                    # code_ebird_name = RENAME_DICT[CODE_EBIRD]
+                    # Sort by BC codes, then by common names
+                    merged_df = merged_df.sort_values(by=[bc_key_tmp, NAME_BC, NAME_EBIRD])[EXPORT_SPC_COLS]
                     
                     # Print missing
                     mask = merged_df[CODE_BC].isna()
-                    merged_df.loc[mask, NAME_EBIRD] = pd.NA
+                    # merged_df.loc[mask, NAME_EBIRD] = pd.NA
                     missing_bc = merged_df.loc[mask, :]
                     
-                    mask = merged_df[code_ebird_name].isna()
-                    merged_df.loc[mask, NAME_EBIRD] = pd.NA
+                    mask = merged_df[CODE_EBIRD].isna()
+                    # merged_df.loc[mask, NAME_EBIRD] = pd.NA
                     missing_ebird = merged_df.loc[mask, :]
                     
+                    mask = (merged_df[NAME_BC].notna()) & (merged_df[NAME_EBIRD].notna()) \
+                            & (merged_df[NAME_BC] != merged_df[NAME_EBIRD])
+                    mismatch = merged_df.loc[mask, :]
+                    
+                    pd.set_option('display.width', 200)
+                    pd.set_option('display.max_info_rows', 20)
+                    pd.set_option('display.max_info_columns', 10)
+                    pd.set_option('display.show_dimensions', False)
+                    
                     if not missing_bc.empty:
-                        print("\nMissing bc codes:")
-                        print(missing_bc)
-                        # print(f"({missing_bc.shape[0]} entries)")
+                        print("\nMissing Bird Atlas BC codes:")
+                        print(missing_bc.fillna('')[[CODE_EBIRD, NAME_BC]])
+                        print(f"({missing_bc.shape[0]} entries)")
                     if not missing_ebird.empty:
                         print("\nMissing ebird codes:")
-                        print(missing_ebird)
-                        # print(f"({missing_ebird.shape[0]} entries)")
+                        print(missing_ebird.fillna('')[[CODE_BC, NAME_BC]])
+                        print(f"({missing_ebird.shape[0]} entries)")
+                    if not mismatch.empty:
+                        print("\nWith different names:")
+                        print(mismatch.fillna('')[[NAME_BC, NAME_EBIRD]])
+                        print(f"({missing_ebird.shape[0]} entries)")
+                    pd.reset_option('display.width')
+                    pd.reset_option('display.max_info_rows')
+                    pd.reset_option('display.max_info_columns')
+                    pd.reset_option('display.show_dimensions')
+                    
                     print("\nMerged:")
                     print(f"  {merged_df.columns.to_list()}\n")
                     
                 except FileNotFoundError:
-                    print(f"'{table_ebird}' is not found. Skip merging.")
+                    print(f"File '{table_ebird}' is not found. Skip merging.")
     
     else:
         sys.exit(f"GET request failed. Status code: {response.status_code}")
@@ -194,7 +217,7 @@ if __name__ == '__main__':
     #--------------------------------------------------------------------------|
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument('--region', nargs=1, default=REGION_CODE_SPC, help='location code (default: %(default)s)')
+    parser.add_argument('--region', default=REGION_CODE_SPC, help='location code (default: %(default)s)')
     args = parser.parse_args()
     
     region_code = args.region

@@ -3,72 +3,75 @@ Connecting...
     (345 species)
 
 Read data from 'species/species_ebird_L164543.csv'.
-  ['speciesCode', 'comNameCode', 'bandingCode', 'sciNameCode', 'comName', 'sciName']
+  ['speciesCode', 'comNameCode', 'bandingCode', 'comName', 'sciNameCode', 'sciName', 'familyComName', 'familySciName', 'familyCode', 'order']
 
 > No match:
   CACG, CAGO, cacgoo1, Cackling Goose (ebird)
 > Merged tuple:
   WEFL, Cordilleran or Pacific-slope Flycatcher (Western) (bc) -- WEFL, Western Flycatcher (ebird)
 
-Missing bc codes:
-    alphaCode_bc bandingCode  ... comName_ebird                           sciName
-346         <NA>        CACG  ...          <NA>                 Branta hutchinsii
-345         <NA>        GWFG  ...          <NA>                   Anser albifrons
-347         <NA>        TUSW  ...          <NA>                Cygnus columbianus
-348         <NA>        <NA>  ...          <NA>       Mareca penelope x americana
-349         <NA>        <NA>  ...          <NA>        Anas platyrhynchos x acuta
-350         <NA>        BLSC  ...          <NA>               Melanitta americana
-351         <NA>        <NA>  ...          <NA>    Bucephala clangula x islandica
-352         <NA>        BBPL  ...          <NA>              Pluvialis squatarola
-353         <NA>        WHIM  ...          <NA>                 Numenius phaeopus
-354         <NA>        MAGO  ...          <NA>                      Limosa fedoa
-355         <NA>        LBDO  ...          <NA>           Limnodromus scolopaceus
-356         <NA>        WILL  ...          <NA>                Tringa semipalmata
-357         <NA>        BLTU  ...          <NA>            Arenaria melanocephala
-358         <NA>        BBSA  ...          <NA>            Calidris subruficollis
-359         <NA>        SAND  ...          <NA>                     Calidris alba
-360         <NA>        DUNL  ...          <NA>                   Calidris alpina
-361         <NA>        PESA  ...          <NA>                Calidris melanotos
-362         <NA>        WESA  ...          <NA>                    Calidris mauri
-363         <NA>        SESA  ...          <NA>                  Calidris pusilla
-364         <NA>        SAGU  ...          <NA>                       Xema sabini
-365         <NA>        SBIG  ...          <NA>              Larus brachyrhynchus
-366         <NA>        GLGU  ...          <NA>                 Larus hyperboreus
-367         <NA>        <NA>  ...          <NA>    Larus argentatus x glaucescens
-368         <NA>        ICGU  ...          <NA>                  Larus glaucoides
-369         <NA>        YBLO  ...          <NA>                     Gavia adamsii
-370         <NA>        AGOS  ...          <NA>            Accipiter atricapillus
-371         <NA>        RLHA  ...          <NA>                     Buteo lagopus
-372         <NA>        WEFL  ...          <NA>              Empidonax difficilis
-373         <NA>        ATFL  ...          <NA>             Myiarchus cinerascens
-374         <NA>        TRKI  ...          <NA>            Tyrannus melancholicus
-375         <NA>        CASJ  ...          <NA>            Aphelocoma californica
-376         <NA>        BGGN  ...          <NA>               Polioptila caerulea
-377         <NA>        LALO  ...          <NA>              Calcarius lapponicus
-378         <NA>        CCLO  ...          <NA>                 Calcarius ornatus
-379         <NA>        HASP  ...          <NA>               Zonotrichia querula
-380         <NA>        <NA>  ...          <NA>  Setophaga nigrescens x townsendi
-
-[36 rows x 7 columns]
+Missing Bird Atlas BC codes:
+    speciesCode                                            comName
+346     cacgoo1                                     Cackling Goose
+370      norgos                                   American Goshawk
+373      astfly                            Ash-throated Flycatcher
+350     blksco2                                       Black Scoter
+357      blktur                                    Black Turnstone
+352      bkbplo                               Black-bellied Plover
+380      x00867  Black-throated Gray x Townsend's Warbler (hybrid)
+376      buggna                              Blue-gray Gnatcatcher
+358      bubsan                            Buff-breasted Sandpiper
+375     cowscj1                               California Scrub-Jay
+378      chclon                         Chestnut-collared Longspur
+351     cxbgol1               Common x Barrow's Goldeneye (hybrid)
+360      dunlin                                             Dunlin
+348      x00421                Eurasian x American Wigeon (hybrid)
+366      glagul                                      Glaucous Gull
+345      gwfgoo                        Greater White-fronted Goose
+379      harspa                                   Harris's Sparrow
+367      x00050            Herring x Glaucous-winged Gull (hybrid)
+368      y00478                                       Iceland Gull
+377      laplon                                   Lapland Longspur
+355      lobdow                              Long-billed Dowitcher
+349      x00628                Mallard x Northern Pintail (hybrid)
+354      margod                                     Marbled Godwit
+361      pecsan                                 Pectoral Sandpiper
+371      rolhaw                                  Rough-legged Hawk
+364      sabgul                                      Sabine's Gull
+359      sander                                         Sanderling
+363      semsan                             Semipalmated Sandpiper
+365     mewgul2                                  Short-billed Gull
+374      trokin                                  Tropical Kingbird
+347      tunswa                                        Tundra Swan
+372      wesfly                                 Western Flycatcher
+362      wessan                                  Western Sandpiper
+353      whimbr                                           Whimbrel
+356     willet1                                             Willet
+369      yebloo                                 Yellow-billed Loon
+(36 entries)
 
 Missing ebird codes:
-    alphaCode_bc bandingCode  ... comName_ebird sciName
-0           ABDU        <NA>  ...          <NA>    <NA>
-1           AGPL        <NA>  ...          <NA>    <NA>
-2           ALFL        <NA>  ...          <NA>    <NA>
-3           AMAV        <NA>  ...          <NA>    <NA>
-15          ANMU        <NA>  ...          <NA>    <NA>
-..           ...         ...  ...           ...     ...
-337         YBCH        <NA>  ...          <NA>    <NA>
-338         YBCU        <NA>  ...          <NA>    <NA>
-339         YBFL        <NA>  ...          <NA>    <NA>
-340         YBSA        <NA>  ...          <NA>    <NA>
-341         YERA        <NA>  ...          <NA>    <NA>
+    alphaCode_bc                    comName
+0           ABDU        American Black Duck
+1           AGPL     American Golden-Plover
+2           ALFL           Alder Flycatcher
+3           AMAV            American Avocet
+15          ANMU           Ancient Murrelet
+..           ...                        ...
+337         YBCH       Yellow-breasted Chat
+338         YBCU       Yellow-billed Cuckoo
+339         YBFL  Yellow-bellied Flycatcher
+340         YBSA   Yellow-bellied Sapsucker
+341         YERA                Yellow Rail
+(125 entries)
 
-[125 rows x 7 columns]
+With different names:
+                                               comName       comName_ebird
+313  Cordilleran or Pacific-slope Flycatcher (Western)  Western Flycatcher
+(125 entries)
 
 Merged:
-  ['alphaCode_bc', 'bandingCode', 'comNameCode', 'speciesCode', 'comName', 'comName_ebird', 'sciName']
+  ['alphaCode_bc', 'bandingCode', 'comNameCode', 'speciesCode', 'comName', 'comName_ebird', 'sciNameCode', 'sciName', 'familyComName', 'familySciName', 'familyCode', 'order', 'comment']
 
 --> Exported to: species/species_merged_L164543.csv
     (381 species)

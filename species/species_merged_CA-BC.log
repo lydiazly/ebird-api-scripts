@@ -3,8 +3,9 @@ Connecting...
     (345 species)
 
 Read data from 'species/species_ebird_CA-BC.csv'.
-  ['speciesCode', 'comNameCode', 'bandingCode', 'sciNameCode', 'comName', 'sciName']
+  ['speciesCode', 'comNameCode', 'bandingCode', 'comName', 'sciNameCode', 'sciName', 'familyComName', 'familySciName', 'familyCode', 'order']
 
+--> Exported to: species/tmp.csv
 > No match:
   BARG, BAGO, bargoo, Barnacle Goose (ebird)
 > No match:
@@ -23,8 +24,6 @@ Read data from 'species/species_ebird_CA-BC.csv'.
   <NA>, BUFF, x00909, Bufflehead x goldeneye sp. (hybrid) (ebird)
 > No match:
   HELG, HEGU, helgui, Helmeted Guineafowl (ebird)
-> No match. Possible related names:
-  Ruffed Grouse (bc), Ruff (ebird)
 > No match:
   HEEG, HEGU, heegul, Heermann's Gull (ebird)
 > No match:
@@ -40,41 +39,47 @@ Read data from 'species/species_ebird_CA-BC.csv'.
 > Merged tuple:
   LCSP, Le Conte's Sparrow (bc) -- LCSP, LeConte's Sparrow (ebird)
 
-Missing bc codes:
-    alphaCode_bc  ...                                 sciName
-356         <NA>  ...                        Branta leucopsis
-363         <NA>  ...                          Cygnus atratus
-409         <NA>  ...  Bucephala albeola x clangula/islandica
-516         <NA>  ...                         Ardenna bulleri
-357         <NA>  ...                       Branta hutchinsii
-..           ...  ...                                     ...
-633         <NA>  ...                      Passerina caerulea
-634         <NA>  ...               Passerina amoena x cyanea
-635         <NA>  ...                         Passerina ciris
-636         <NA>  ...                         Spiza americana
-637         <NA>  ...                        Sicalis flaveola
-
-[293 rows x 7 columns]
+Missing Bird Atlas BC codes:
+    speciesCode                                    comName
+356      bargoo                             Barnacle Goose
+363      blkswa                                 Black Swan
+410      x00909        Bufflehead x goldeneye sp. (hybrid)
+517      bulshe                        Buller's Shearwater
+357     cacgoo1                             Cackling Goose
+..          ...                                        ...
+574     yebwar3                      Yellow-browed Warbler
+561      yegvir                         Yellow-green Vireo
+625      yetwar                    Yellow-throated Warbler
+585     zebfin2                                Zebra Finch
+415      x00631  goldeneye sp. x Hooded Merganser (hybrid)
+(294 entries)
 
 Missing ebird codes:
-    alphaCode_bc bandingCode  ... comName_ebird sciName
-92          COFL        <NA>  ...          <NA>    <NA>
-106         CROW        <NA>  ...          <NA>    <NA>
-169         LEBI        <NA>  ...          <NA>    <NA>
-186         MEGU        <NA>  ...          <NA>    <NA>
-199         NOCR        <NA>  ...          <NA>    <NA>
-202         NOGO        <NA>  ...          <NA>    <NA>
-232         PSFL        <NA>  ...          <NA>    <NA>
-263         SAHY        <NA>  ...          <NA>    <NA>
-265         SAPS        <NA>  ...          <NA>    <NA>
-272         SKLA        <NA>  ...          <NA>    <NA>
-327         WIWR        <NA>  ...          <NA>    <NA>
-329         WSJA        <NA>  ...          <NA>    <NA>
+    alphaCode_bc                        comName
+92          COFL         Cordilleran Flycatcher
+106         CROW  American or Northwestern Crow
+169         LEBI                  Least Bittern
+186         MEGU                       Mew Gull
+199         NOCR              Northwestern Crow
+202         NOGO               Northern Goshawk
+232         PSFL       Pacific-slope Flycatcher
+263         SAHY               Sapsucker hybrid
+265         SAPS              Unknown Sapsucker
+272         SKLA                       Sky Lark
+327         WIWR            Pacific/Winter Wren
+329         WSJA              Western Scrub-Jay
+(12 entries)
 
-[12 rows x 7 columns]
+With different names:
+                                               comName              comName_ebird
+32                           Black-crowned Night-Heron  Black-crowned Night Heron
+139                                           Gray Jay                 Canada Jay
+168                                 Le Conte's Sparrow          LeConte's Sparrow
+313  Cordilleran or Pacific-slope Flycatcher (Western)         Western Flycatcher
+(12 entries)
 
 Merged:
-  ['alphaCode_bc', 'bandingCode', 'comNameCode', 'speciesCode', 'comName', 'comName_ebird', 'sciName']
+  ['alphaCode_bc', 'bandingCode', 'comNameCode', 'speciesCode', 'comName', 'comName_ebird', 'sciNameCode', 'sciName', 'familyComName', 'familySciName', 'familyCode', 'order', 'comment']
 
 --> Exported to: species/species_merged_CA-BC.csv
-    (638 species)
+    (639 species)

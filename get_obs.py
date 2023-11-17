@@ -33,9 +33,10 @@ TODO:
 [x] Merge BC code
 [x] Organize the code
 [ ] Google sheets
+[ ] Add comment column
 """
 # 2023-11-09 created by Lydia
-# 2023-11-15 last modified by Lydia
+# 2023-11-16 last modified by Lydia
 ###############################################################################|
 import argparse
 from datetime import datetime, timedelta
@@ -71,9 +72,10 @@ def main():
     parser.add_argument('end_date', nargs='?', default=end_date.strftime(DATE_FORMAT), help="format: YYYY-MM-DD (default: %(default)s)")
     parser.add_argument('-f', dest='formats', metavar='FORMAT', nargs='+', default=('csv',), choices={'csv', 'json'},
                         help='export format of observation data: {%(choices)s} (default: %(default)s)')
-    parser.add_argument('--region', nargs=1, default=REGION_CODE_OBS, help='location code (default: %(default)s)')
-    parser.add_argument('--api', nargs=1, default=API_KEY, help=f"API key, read from file '{API_FILE}' if not specified")
-    parser.add_argument('-s', '--species', action='store_true', help="download species list then exit (default: %(default)s)")
+    parser.add_argument('--region', default=REGION_CODE_OBS, help='location code (default: %(default)s)')
+    parser.add_argument('--api', default=API_KEY, help=f"API key, read from file '{API_FILE}' if not specified")
+    parser.add_argument('-t', '--table', default=SPECIES_TABLE, help="use the species table in this file (default: %(default)s)")
+    parser.add_argument('-s', '--species', action='store_true', help="download species table then exit (default: %(default)s)")
     parser.add_argument('-d', '--daily', action='store_true', help='store daily data in JSON or CSV format (default: %(default)s)')
     args = parser.parse_args()
     
@@ -82,6 +84,7 @@ def main():
     download_daily = args.daily
     region_code = args.region
     api_key = args.api
+    species_file = args.table
 
     if args.start_date:
         start_date = datetime.strptime(args.start_date, DATE_FORMAT)
@@ -99,7 +102,7 @@ def main():
             print(f"Not found.")
             api_key = input(f"Please enter the eBird API key: ")
         if not api_key:
-            sys.exit(f"Exit.")
+            sys.exit("Exit.")
     headers = {'X-eBirdApiToken': api_key}
 
     print(f"[API key]     {api_key}")
@@ -112,34 +115,37 @@ def main():
     #--------------------------------------------------------------------------|
     species_df = pd.DataFrame()
     if not download_species:
-        input_file = f"species/{EXPORT_FILE['species_merged'].format(region_code=region_code)}.csv"
         try:
-            # Read species codes (bc codes included)
-            species_df = pd.read_csv(input_file, sep=',', header=0,
+            # Read species codes (Bird Atlas BC codes included)
+            species_df = pd.read_csv(species_file, sep=',', header=0,
                                      skipinitialspace=True,
                                      quoting=csv.QUOTE_NONNUMERIC,
                                      encoding='utf-8')
-            print(f"Read data from '{input_file}'.")
+            print(f"Imported data from '{species_file}'.")
+            print(f"  {species_df.columns.to_list()}")
             print(f"({species_df.shape[0]} species)\n")
         except FileNotFoundError:
-            print(f"'{input_file}' is not found.")
+            print(f"File '{species_file}' is not found.")
+            go_download = input(f"Download? (y/[n]) ")
+            if go_download != "y":
+                sys.exit("Exit.")
     
     session = requests.Session()
     
     #-- Download species codes and names in a region --------------------------|
     if species_df.empty:
-        species_df = get_species(session, URL_DICT, region_code, headers)
+        species_df = get_species(session, URL_DICT, REGION_CODE_SPC, headers)
         export(species_df, 'csv',
-               EXPORT_FILE['species_ebird'].format(region_code=region_code),
+               EXPORT_FILE['species_ebird'].format(region_code=REGION_CODE_SPC),
                subdir='species')
-        print(f"    ({species_df.shape[0]} species)")
+        print(f"    ({species_df.shape[0]} species)\n")
         
         #-- Get the alpha codes from www.birdatlas.bc.ca ----------------------|
-        species_df = get_bc_codes(session, region_code)
+        species_df = get_bc_codes(session, REGION_CODE_SPC)
         if not species_df.empty:
             # Export to CSV
             export(species_df, 'csv',
-                   EXPORT_FILE['species_merged'].format(region_code=region_code),
+                   EXPORT_FILE['species_merged'].format(region_code=REGION_CODE_SPC),
                    subdir='species')
             print(f"    ({species_df.shape[0]} species)")
         
@@ -154,7 +160,7 @@ def main():
     print("Downloading obervation data...")
     while current_date >= start_date:
         merged_df = species_df
-        merged_df[COUNT_COL_NAME] = 0
+        merged_df[COUNT_COL] = 0
         last_date = current_date
         print(f"\n== {last_date.strftime('%B, %Y')} ==")
         # For each month
@@ -177,9 +183,9 @@ def main():
                         print(f"    ({df.shape[0]} rows x {df.shape[1]} columns)")
                     #-- Merge columns -----------------------------------------|
                     # 'howMany' -> 'howMany','howMany_day1', 'howMany_day2', ...
-                    cols = [CODE_EBIRD, COUNT_COL_NAME]
+                    cols = [CODE_EBIRD, COUNT_COL]
                     for col in df.columns:
-                        if col in EXTRA_COL_NAMES:
+                        if col in EXTRA_COLS:
                             cols.append(col)
                     merged_df = pd.merge(merged_df, df[cols],
                                          on=CODE_EBIRD, how='left',
@@ -187,7 +193,7 @@ def main():
                     #-- Append missing rows -----------------------------------|
                     missing_mask = ~df[CODE_EBIRD].isin(merged_df[CODE_EBIRD])
                     if missing_mask.any():
-                        new_rows = df.loc[missing_mask, OBS_COL_NAMES]
+                        new_rows = df.loc[missing_mask, OBS_COLS]
                         merged_df = pd.concat([merged_df, new_rows], ignore_index=True)
                         print("Appended: ", new_rows['speciesCode'].to_list())
             else:
@@ -201,15 +207,15 @@ def main():
                                     .apply(pd.to_numeric, errors='coerce') \
                                     .fillna(0).astype('int64')
         #-- Sum the 'howMany_*' columns ---------------------------------------|
-        merged_df[EXPORT_COUNT_COL_NAME] = merged_df[count_columns].sum(axis=1)
+        merged_df[EXPORT_COUNT_COL] = merged_df[count_columns].sum(axis=1)
         
         #-- Extra columns -----------------------------------------------------|
         # Append all the non-null different values into one column
-        for extra_col in EXTRA_COL_NAMES:
+        for extra_col in EXTRA_COLS:
             extra_columns = [col for col in merged_df.columns if extra_col in col]
             merged_df[extra_col] = merged_df[extra_columns].apply(lambda x: ' '.join(set(x.dropna())), axis=1)
         
-        merged_df = merged_df[EXPORT_OBS_COL_NAMES]
+        merged_df = merged_df[EXPORT_OBS_COLS].rename(columns=OBS_COLUMN_DICT)
         
         #-- Export monthly data -----------------------------------------------|
         date0_str = last_date.replace(day=1).strftime(DATE_FORMAT) # First day of the month
